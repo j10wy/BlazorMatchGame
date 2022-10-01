@@ -1,34 +1,81 @@
 ﻿@page "/"
+@using System.Timers
 
 <PageTitle>Index</PageTitle>
 
 <style>
-	.container {
-		width: 400px;
-	}
+    .container {
+        width: 400px;
+    }
 
-	button {
-		font-size: 50px;
-		height: 100px;
-		width: 100px;
-	}
+    button {
+        font-size: 50px;
+        height: 100px;
+        width: 100px;
+    }
 </style>
 
 <div class="container">
-	<div class="row">
-		@foreach (var animal in shuffledAnimals)
-		{
-			<div class="col-3">
-				<button type="button" class="btn btn-outline-dark">
-					<h1>@animal</h1>
-				</button>
-			</div>
-		}
-	</div>
+    <div class="row">
+        @for (var num = 0; num < shuffledAnimals.Count; num++)
+        {
+            var animal = shuffledAnimals[num];
+            var description = $"Button #{num}";
+            <div class="col-3">
+                <button @onclick="@( () => ButtonClick(animal, description) )"
+                        type="button" class="btn btn-outline-dark">
+                    <h1>@shuffledAnimals[num]</h1>
+                </button>
+            </div>
+        }
+    </div>
+    <div class="row">
+        <h2>Matches found: @matchesFound</h2>
+    </div>
+    <div class="row">
+        <h2>Time: @timeDisplay</h2>
+    </div>
 </div>
 
 @code {
-	List<string> animalEmojis = new List<string>()
+    string lastAnimalFound = string.Empty;
+    string lastDescription = string.Empty;
+    float matchesFound = 0;
+    Timer timer = new Timer(100);
+    int tenthsOfSecondsElapsed = 0;
+    string timeDisplay = String.Empty;
+
+    private void ButtonClick(string animal, string description)
+    {
+        if (lastAnimalFound == string.Empty)
+        {
+            lastAnimalFound = animal;
+            lastDescription = description;
+            timer.Start();
+        }
+        else if ((lastAnimalFound == animal) && (description != lastDescription))
+        {
+            lastAnimalFound = string.Empty;
+            lastDescription = string.Empty;
+
+            shuffledAnimals = shuffledAnimals.Select(a => a.Replace(animal,
+            string.Empty)).ToList();
+
+            matchesFound++;
+            if (matchesFound == 8)
+            {
+                timer.Stop();
+                timeDisplay += " - Play Again?";
+                SetUpGame();
+            }
+        }
+        else
+        {
+            lastAnimalFound = string.Empty;
+            lastDescription = string.Empty;
+        }
+    }
+    List<string> animalEmojis = new List<string>()
 {
 "🐶", "🐶",
 "🐷", "🐷",
@@ -39,16 +86,30 @@
 "🐔", "🐔",
 "🦖", "🦖",
 };
-	List<string> shuffledAnimals = new List<string>();
-	protected override void OnInitialized()
-	{
-		SetUpGame();
-	}
+    List<string> shuffledAnimals = new List<string>();
+    protected override void OnInitialized()
+    {
+        timer.Elapsed += Timer_Tick;
+        SetUpGame();
+    }
 
-	private void SetUpGame()
-	{
-		Random random = new Random();
-		shuffledAnimals = animalEmojis.OrderBy(item => random.Next()).ToList();
-	}
+    private void SetUpGame()
+    {
+        Random random = new Random();
+        shuffledAnimals = animalEmojis.OrderBy(item => random.Next()).ToList();
+        matchesFound = 0;
+        tenthsOfSecondsElapsed = 0;
+    }
+
+    private void Timer_Tick(Object source, ElapsedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            tenthsOfSecondsElapsed++;
+            timeDisplay = (tenthsOfSecondsElapsed / 10F)
+                .ToString("0.0s");
+            StateHasChanged();
+        });
+    }
 
 }
