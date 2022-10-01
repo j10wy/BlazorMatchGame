@@ -2,9 +2,53 @@
 
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<style>
+	.container {
+		width: 400px;
+	}
 
-Welcome to your new app.
+	button {
+		font-size: 50px;
+		height: 100px;
+		width: 100px;
+	}
+</style>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+<div class="container">
+	<div class="row">
+		@foreach (var animal in shuffledAnimals)
+		{
+			<div class="col-3">
+				<button type="button" class="btn btn-outline-dark">
+					<h1>@animal</h1>
+				</button>
+			</div>
+		}
+	</div>
+</div>
 
+@code {
+	List<string> animalEmojis = new List<string>()
+{
+"🐶", "🐶",
+"🐷", "🐷",
+"🦁", "🦁",
+"🦀", "🦀",
+"🦄", "🦄",
+"🐳", "🐳",
+"🐔", "🐔",
+"🦖", "🦖",
+};
+	List<string> shuffledAnimals = new List<string>();
+	protected override void OnInitialized()
+	{
+		SetUpGame();
+	}
+
+	private void SetUpGame()
+	{
+		Random random = new Random();
+		shuffledAnimals = animalEmojis.OrderBy(item => random.Next()).ToList();
+	}
+
+}
